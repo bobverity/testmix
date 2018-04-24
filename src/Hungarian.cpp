@@ -162,8 +162,7 @@ vector<int> hungarian(vector< vector<double> > &m, vector<int> &edges_left, vect
   } // rep loop
   
   // if reached this point then not managed to find best matching
-  print("Warning: Hungarian algorithm unable to find best matching");
-  edges_left = seq_int(0, n-1);
-  
-  return edges_left;
+  Rcpp::stop("Hungarian algorithm unable to find best matching"); // # nocov
+  edges_left = seq_int(0, n-1); // # nocov
+  return edges_left;  // # nocov
 }
