@@ -7,8 +7,7 @@
 example_mcmc(x, K = 3, mu_prior_mean = 0, mu_prior_var = 1000,
   sigma = 1, burnin = 100, samples = 1000, rungs = 10,
   solve_label_switching_on = TRUE, coupling_on = TRUE, scaffold_on = TRUE,
-  scaffold_n = 10, splitmerge_on = TRUE, parallel_on = TRUE,
-  num_cores = NULL)
+  scaffold_n = 10, splitmerge_on = TRUE, cluster = NULL)
 }
 \arguments{
 \item{x}{the raw data (vector)}
@@ -37,14 +36,17 @@ example_mcmc(x, K = 3, mu_prior_mean = 0, mu_prior_var = 1000,
 
 \item{splitmerge_on}{whether to implement a split-merge proposal}
 
-\item{parallel_on}{whether to run each value of K in parallel}
-
-\item{num_cores}{number of cores to use in parallelisation}
+\item{cluster}{pass in a cluster environment}
 }
 \description{
 Demonstrates good algorithmic and coding practices for a simple normal mixture model. Implements advanced MCMC methods, including Metropolis-coupling over temperature rungs, a split-merge proposal, and an additional form of proposal referred to here as a "scaffold" proposal. Uses Rcpp and the package parallel for speed and efficiency.
 }
 \examples{
 # run example MCMC
-m <- example_mcmc(1:5, parallel_on = FALSE)
+m <- example_mcmc(1:5)
+
+# example that uses a cluster and parallelisation
+cl <- parallel::makeCluster(type = "PSOCK", spec = 2)
+m <- example_mcmc(1:5, cluster = cl)
+parallel::stopCluster(cl)
 }

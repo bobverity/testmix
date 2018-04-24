@@ -28,18 +28,19 @@ NULL
 #' @param scaffold_on whether to use scaffolds to improve mixing
 #' @param scaffold_n the number of scaffolds to use
 #' @param splitmerge_on whether to implement a split-merge proposal
-#' @param parallel_on whether to run each value of K in parallel
-#' @param num_cores number of cores to use in parallelisation
+#' @param cluster pass in a cluster environment
 #'
 #' @export
 #' @examples
 #' # run example MCMC
-#' m <- example_mcmc(1:5, parallel_on = FALSE)
+#' m <- example_mcmc(1:5)
+#' 
+#' # example that uses a cluster and parallelisation
+#' cl <- parallel::makeCluster(type = "PSOCK", spec = 2)
+#' m <- example_mcmc(1:5, cluster = cl)
+#' parallel::stopCluster(cl)
 
-example_mcmc <- function(x, K = 3, mu_prior_mean = 0, mu_prior_var = 1e3, sigma = 1, burnin =1e2, samples = 1e3, rungs = 10, solve_label_switching_on = TRUE, coupling_on = TRUE, scaffold_on = TRUE, scaffold_n = 10, splitmerge_on = TRUE, parallel_on = TRUE, num_cores = NULL) {
-  
-  # set defaults
-  num_cores <- define_default(num_cores, detectCores())
+example_mcmc <- function(x, K = 3, mu_prior_mean = 0, mu_prior_var = 1e3, sigma = 1, burnin =1e2, samples = 1e3, rungs = 10, solve_label_switching_on = TRUE, coupling_on = TRUE, scaffold_on = TRUE, scaffold_n = 10, splitmerge_on = TRUE, cluster = NULL) {
   
   # check inputs
   assert_that(length(x) > 1)
@@ -50,8 +51,6 @@ example_mcmc <- function(x, K = 3, mu_prior_mean = 0, mu_prior_var = 1e3, sigma 
   assert_that(samples > 0)
   assert_that(rungs > 0)
   assert_that(scaffold_n > 0)
-  assert_that(num_cores > 0)
-  assert_that(num_cores <= detectCores(), msg = paste("num_cores must be less than or equal to", detectCores()))
   
   # define argument list
   parallel_args <- list()
@@ -63,33 +62,26 @@ example_mcmc <- function(x, K = 3, mu_prior_mean = 0, mu_prior_var = 1e3, sigma 
     pb_samples <- txtProgressBar(min = 0, max = samples, initial = NA, style = 3)
     
     # create argument list
-    parallel_args[[i]] <- list(x = x, K = K[i], mu_prior_mean = mu_prior_mean, mu_prior_var = mu_prior_var, sigma = sigma, burnin = burnin, samples = samples, rungs = rungs, solve_label_switching_on = solve_label_switching_on, coupling_on = coupling_on, scaffold_on = scaffold_on, scaf_n = scaffold_n, splitmerge_on = splitmerge_on, parallel_on = parallel_on, test_convergence = test_convergence, update_progress = update_progress, pb_scaf = pb_scaf, pb_burnin = pb_burnin, pb_samples = pb_samples)
+    parallel_args[[i]] <- list(x = x, K = K[i], mu_prior_mean = mu_prior_mean, mu_prior_var = mu_prior_var, sigma = sigma, burnin = burnin, samples = samples, rungs = rungs, solve_label_switching_on = solve_label_switching_on, coupling_on = coupling_on, scaffold_on = scaffold_on, scaf_n = scaffold_n, splitmerge_on = splitmerge_on, test_convergence = test_convergence, update_progress = update_progress, pb_scaf = pb_scaf, pb_burnin = pb_burnin, pb_samples = pb_samples)
   }
   
   #------------------------
   
   # run efficient Rcpp function
-  if (parallel_on) {  # run in parallel
-    
-    cl <- makeCluster(num_cores, type="FORK")
-    output_raw <- clusterApplyLB(cl = cl, parallel_args, example_mcmc_cpp)
-    stopCluster(cl)
-    
-  } else {  # run in serial
-    
-    output_raw <- list()
-    for (i in 1:length(K)) {
-      output_raw[[i]] <- example_mcmc_cpp(parallel_args[[i]])
+  if (!is.null(cluster)) {  # run in parallel
+    if (!inherits(cluster, "cluster")) {
+      stop("expected a cluster object")
     }
-    
+    clusterEvalQ(cluster, library(testmix))
+    output_raw <- clusterApplyLB(cl = cluster, parallel_args, example_mcmc_cpp)
+  } else {  # run in serial
+    output_raw <- lapply(parallel_args, example_mcmc_cpp)
   }
   
   #------------------------
   
   # begin processing results
-  if (!parallel_on) {
-    cat("Processing results\n")
-  }
+  message("Processing results\n")
   
   # loop through K
   ret <- list()

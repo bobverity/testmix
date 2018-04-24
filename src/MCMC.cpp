@@ -22,8 +22,7 @@ MCMC::MCMC(vector<double> &x, Rcpp::List &args) {
   scaf_on = rcpp_to_bool(args["scaffold_on"]);
   scaf_n = rcpp_to_int(args["scaf_n"]);
   splitmerge_on = rcpp_to_bool(args["splitmerge_on"]);
-  parallel_on = rcpp_to_bool(args["parallel_on"]);
-  print_console = !parallel_on;
+  print_console = true;
   
   // thermodynamic parameters
   beta_vec = vector<double>(rungs);

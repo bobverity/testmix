@@ -16,6 +16,7 @@ test_that("C++ Hungarian algorithm working correctly", {
   
   # test with positive values
   m <- 5 - diag(5,10)
+  set.seed(1)
   for (i in 1:1e2) {
     s <- sample(1:nrow(m))
     expect_equal(call_hungarian(m[s,])$best_matching, s-1)
