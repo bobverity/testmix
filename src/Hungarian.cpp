@@ -114,22 +114,23 @@ using namespace std;
 // Augmenting paths will not improve upon this solution. Therefore, we want to 
 // lock-in the current zero-cost edges in the most parsimonious way, i.e. 
 // blocking off as few nodes as possible. Thinking in terms of the cost matrix, 
-// this is equivalent to drawing through rows and columns that cross out all 0s,
-// while drawing as few lines as possible. Clearly in this case the best option 
-// will be to cross of the first column and the final row. More generally, which
-// rows and columns to cross off can be determined from the previous augmented 
-// paths step. We simply mark every node that was visited when searching for 
-// augmented paths - in this example this will be the second and first nodes on 
-// the left, and the first node on the right. We then cross out all marked nodes
-// on the right, and all *unmarked* nodes on the left. This is equivalent to 
-// crossing out the first column and the final row of the cost matrix. We then 
-// calculate the minimum value of all remaining (un-crossed-out) elements, and 
-// subtract this value from the remaining elements. This yeilds the following
-// cost matrix:
+// this is equivalent to drawing lines through rows and columns that cross out 
+// all 0s, while drawing as few lines as possible. Clearly in this case the best
+// option will be to cross of the first column and the final row. More 
+// generally, which rows and columns to cross off can be determined from the 
+// previous augmented paths step. We simply mark every node that was visited 
+// when searching for augmented paths - in this example this will be the second 
+// and first nodes on the left, and the first node on the right. We then cross 
+// out all marked nodes on the right, and all *unmarked* nodes on the left. This
+// is equivalent to crossing out the first column and the final row of the cost 
+// matrix. We then calculate the minimum value of all remaining (un-crossed-out)
+// elements. We subtract this value from the unmarked elements, and add this 
+// value to any elements that are doubly crossed out (in this example the
+// bottom-left zero). This yeilds the following cost matrix:
 // 
 // 0 1 2
 // 0 0 3
-// 0 0 0
+// 1 0 0
 //
 // We then repeat the entire procedure of searching for a matching and
 // augmenting paths etc. on this new cost matrix, continuing until we have found
