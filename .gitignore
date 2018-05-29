@@ -15,3 +15,5 @@ ignore/
 *.Rproj
 *.Rproj.user
 *.Rhistory
+R/.Rd*
+.Rproj.user
